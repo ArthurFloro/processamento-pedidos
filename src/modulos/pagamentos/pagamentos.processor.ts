@@ -1,6 +1,6 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 import { DataSource } from 'typeorm';
 import { Pedido, StatusPedido } from '../pedidos/entidades/pedido.entity';
 
@@ -15,7 +15,11 @@ export class ProcessadorDePagamentos extends WorkerHost {
   private readonly logger = new Logger(ProcessadorDePagamentos.name);
 
   // Injetamos a conexão do TypeORM para checar o estado real do pedido
-  constructor(private dataSource: DataSource) {
+  constructor(
+    private dataSource: DataSource,
+    // Injetamos a fila da PRÓXIMA etapa do processo
+    @InjectQueue('fila-de-estoque') private filaDeEstoque: Queue,
+  ) {
     super();
   }
 
@@ -62,6 +66,14 @@ export class ProcessadorDePagamentos extends WorkerHost {
 
     this.logger.log(
       `Pagamento APROVADO! Pedido ID: ${pedido.id} atualizado para PAGO.`,
+    );
+
+    // COREOGRAFIA: Pagamento aprovado, mandamos para o worker de Estoque trabalhar!
+    // Usamos o id do pedido como jobId no BullMQ para evitar que o estoque seja duplicado na fila
+    await this.filaDeEstoque.add(
+      'reservar-estoque',
+      { idDoPedido: pedido.id },
+      { jobId: `estoque-${pedido.id}` },
     );
     return { status: 'APROVADO' };
   }

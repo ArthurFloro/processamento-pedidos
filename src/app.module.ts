@@ -13,6 +13,9 @@ import { ServicoDeOutbox } from './modulos/outbox/outbox.service';
 import { ProcessadorDePagamentos } from './modulos/pagamentos/pagamentos.processor';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ControladorDeFilas } from './modulos/filas/filas.controller';
+import { ControladorDeEstoque } from './modulos/estoque/estoque.controller';
+import { ServicoEstoque } from './modulos/estoque/estoque.service';
+import { ProcessadorDeEstoque } from './modulos/estoque/estoque.processor';
 
 @Module({
   imports: [
@@ -66,13 +69,29 @@ import { ControladorDeFilas } from './modulos/filas/filas.controller';
         },
       },
     }),
+
+    // Nova Fila Registrada com retries curtos para lidar rápido com concorrência
+    BullModule.registerQueue({
+      name: 'fila-de-estoque',
+      defaultJobOptions: {
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 1000 },
+      },
+    }),
   ],
-  controllers: [ControladorDePedidos, ControladorDeFilas, AppController],
+  controllers: [
+    ControladorDePedidos,
+    ControladorDeFilas,
+    AppController,
+    ControladorDeEstoque,
+  ],
   providers: [
     AppService,
     ServicoDeOutbox,
     ProcessadorDePagamentos,
     ServicoDePedidos,
+    ServicoEstoque,
+    ProcessadorDeEstoque,
     {
       // habilitando validação global de DTOs
       provide: 'APP_PIPE',

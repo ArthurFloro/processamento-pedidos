@@ -9,7 +9,7 @@ export class Estoque {
   idDoProduto!: string;
 
   @Column('int')
-  quantidadeDisponível!: number;
+  quantidadeDisponivel!: number;
 
   // Optimistic Locking: o TypeORM incrementa automaticamente.
   // Se 2 processos tentarem atualizar a mesma versão, o segundo falhará.
