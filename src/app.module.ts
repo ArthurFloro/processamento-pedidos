@@ -9,6 +9,9 @@ import { EventoOutbox } from './modulos/pedidos/entidades/evento-outbox.entity';
 import { Pedido } from './modulos/pedidos/entidades/pedido.entity';
 import { ControladorDePedidos } from './modulos/pedidos/pedidos.controller';
 import { ServicoDePedidos } from './modulos/pedidos/pedidos.service';
+import { ServicoDeOutbox } from './modulos/outbox/outbox.service';
+import { ProcessadorDePagamentos } from './modulos/pagamentos/pagamentos.processor';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -47,10 +50,20 @@ import { ServicoDePedidos } from './modulos/pedidos/pedidos.service';
         },
       }),
     }),
+
+    // Inicia o agendador de tarefas
+    ScheduleModule.forRoot(),
+
+    // 2. Registra a fila específica
+    BullModule.registerQueue({
+      name: 'fila-de-pagamento',
+    }),
   ],
   controllers: [ControladorDePedidos, AppController],
   providers: [
     AppService,
+    ServicoDeOutbox,
+    ProcessadorDePagamentos,
     ServicoDePedidos,
     {
       // habilitando validação global de DTOs
