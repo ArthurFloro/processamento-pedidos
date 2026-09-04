@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,6 +7,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { Estoque } from './modulos/pedidos/entidades/estoque.entity';
 import { EventoOutbox } from './modulos/pedidos/entidades/evento-outbox.entity';
 import { Pedido } from './modulos/pedidos/entidades/pedido.entity';
+import { ControladorDePedidos } from './modulos/pedidos/pedidos.controller';
+import { ServicoDePedidos } from './modulos/pedidos/pedidos.service';
 
 @Module({
   imports: [
@@ -46,7 +48,15 @@ import { Pedido } from './modulos/pedidos/entidades/pedido.entity';
       }),
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [ControladorDePedidos, AppController],
+  providers: [
+    AppService,
+    ServicoDePedidos,
+    {
+      // habilitando validação global de DTOs
+      provide: 'APP_PIPE',
+      useClass: ValidationPipe,
+    },
+  ],
 })
 export class AppModule {}
