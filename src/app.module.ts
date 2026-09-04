@@ -12,6 +12,7 @@ import { ServicoDePedidos } from './modulos/pedidos/pedidos.service';
 import { ServicoDeOutbox } from './modulos/outbox/outbox.service';
 import { ProcessadorDePagamentos } from './modulos/pagamentos/pagamentos.processor';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ControladorDeFilas } from './modulos/filas/filas.controller';
 
 @Module({
   imports: [
@@ -57,9 +58,16 @@ import { ScheduleModule } from '@nestjs/schedule';
     // 2. Registra a fila específica
     BullModule.registerQueue({
       name: 'fila-de-pagamento',
+      defaultJobOptions: {
+        attempts: 3, // tentará 3 vezes antes de ir para a DLQ
+        backoff: {
+          type: 'exponential',
+          delay: 2000, // atraso base: 2s, depois 4s...
+        },
+      },
     }),
   ],
-  controllers: [ControladorDePedidos, AppController],
+  controllers: [ControladorDePedidos, ControladorDeFilas, AppController],
   providers: [
     AppService,
     ServicoDeOutbox,
