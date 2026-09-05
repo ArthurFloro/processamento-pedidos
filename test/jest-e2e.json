@@ -1,9 +1,30 @@
+
 {
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.(t|j)s$": [
+      "@swc/jest",
+      {
+        "jsc": {
+          "parser": {
+            "syntax": "typescript",
+            "tsx": false,
+            "decorators": true
+          },
+          "target": "es2022",
+          "transform": {
+            "legacyDecorator": true,
+            "decoratorMetadata": true
+          }
+        }
+      }
+    ]
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!(@nestjs/(typeorm|config|bullmq|bull-shared|schedule)|typeorm)/)"
+  ]
 }
+
